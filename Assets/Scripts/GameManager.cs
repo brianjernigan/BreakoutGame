@@ -34,11 +34,23 @@ public class GameManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
+
+        Setup();
     }
 
-    private void Start()
+    private void Update()
     {
-        Setup();
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            if (SceneManager.GetActiveScene().buildIndex < 3)
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            } else
+            {
+                
+            }
+            
+        }
     }
 
     public void Setup()
@@ -68,6 +80,12 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void AddLife()
+    {
+        _lives++;
+        _livesText.text = "Lives: " + _lives;
     }
 
     public void LoseLife()
