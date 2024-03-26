@@ -9,14 +9,34 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int _lives = 3;
     [SerializeField] private int _bricks = 20;
     [SerializeField] private float _resetDelay = 1f;
+
     [SerializeField] private TMP_Text _livesText;
+
     [SerializeField] private GameObject _gameOver;
     [SerializeField] private GameObject _youWon;
+
     [SerializeField] private GameObject _bricksPrefab;
     [SerializeField] private GameObject _paddle;
+
     private GameObject _clonePaddle;
 
+    private static GameManager _instance;
+    public static GameManager Instance => _instance;
+
     private void Awake()
+    {
+        if (_instance == null)
+        {
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+        } 
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
     {
         Setup();
     }
