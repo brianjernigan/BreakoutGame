@@ -3,23 +3,25 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("Game Settings")]
     [SerializeField] private int _lives = 3;
+    [SerializeField] private int _bricks = 20;
     [SerializeField] private float _resetDelay = 1f;
 
+    [Header("UI Elements")]
     [SerializeField] private TMP_Text _livesText;
+    [SerializeField] private GameObject _gameOverScreen;
+    [SerializeField] private GameObject _youWonScreen;
 
-    [SerializeField] private GameObject _gameOver;
-    [SerializeField] private GameObject _youWon;
-
+    [Header("Game Objects")]
     [SerializeField] private GameObject _bricksPrefab;
     [SerializeField] private GameObject _paddle;
 
     private GameObject _clonePaddle;
-
-    private int _bricksRemaining;
 
     private static GameManager _instance;
     public static GameManager Instance => _instance;
@@ -30,65 +32,93 @@ public class GameManager : MonoBehaviour
         {
             _instance = this;
             DontDestroyOnLoad(gameObject);
+
+            SceneManager.sceneLoaded += OnSceneLoad;
         } 
         else
         {
             Destroy(gameObject);
         }
-
-        Setup();
     }
 
     private void Update()
+    {
+        DebugControls();
+    }
+
+    private void DebugControls()
     {
         if (Input.GetKeyDown(KeyCode.N))
         {
             LoadNextScene();
         }
-
-        Debug.Log(_bricksRemaining);
     }
 
-    public void Setup()
+    private void OnSceneLoad(Scene scene, LoadSceneMode mode)
+    {
+        InitialSetup();
+        ResetBricks();
+        _youWonScreen.SetActive(false);
+        _gameOverScreen.SetActive(false);
+    }
+
+    private void InitialSetup()
     {
         _clonePaddle = Instantiate(_paddle, transform.position, Quaternion.identity);
         Instantiate(_bricksPrefab, transform.position, Quaternion.identity);
-        _bricksRemaining = 20;
+    }
+
+    private void ResetBricks()
+    {
+        _bricks = 20;
+    }
+
+    private void ResetLives()
+    {
+        _lives = 3;
+        UpdateLivesText();
+    }
+
+    private void UpdateLivesText()
+    {
+        _livesText.text = $"Lives: {_lives}";
     }
 
     private void CheckGameOver()
     {
-        if (_bricksRemaining < 1)
+        if (_bricks < 1)
         {
-            _youWon.SetActive(true);
+            _youWonScreen.SetActive(true);
             Time.timeScale = .25f;
-            Invoke("Reset", _resetDelay);
+            GameObject.FindWithTag("Ball").GetComponent<SphereCollider>().enabled = false;
+            Invoke("LoadNextScene", _resetDelay);
         }
 
         if (_lives < 1)
         {
-            _gameOver.SetActive(true);
+            _gameOverScreen.SetActive(true);
             Time.timeScale = .25f;
-            Invoke("Reset", _resetDelay);
+            Invoke("RestartGame", _resetDelay);
         }
     }
 
     private void Reset()
     {
         Time.timeScale = 1f;
+        ResetLives();
         ReloadScene();
     }
 
-    public void AddLife()
+    private void AddLife()
     {
         _lives++;
-        _livesText.text = "Lives: " + _lives;
+        UpdateLivesText();
     }
 
     public void LoseLife()
     {
         _lives--;
-        _livesText.text = "Lives: " + _lives;
+        UpdateLivesText();
         Destroy(_clonePaddle);
         Invoke("SetupPaddle", _resetDelay);
         CheckGameOver();
@@ -101,7 +131,7 @@ public class GameManager : MonoBehaviour
 
     public void DestroyBrick()
     {
-        _bricksRemaining--;
+        _bricks--;
         CheckGameOver();
     }
 
@@ -115,14 +145,24 @@ public class GameManager : MonoBehaviour
         if (SceneManager.GetActiveScene().buildIndex < 2)
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+            AddLife();
         } else
         {
             RestartGame();
         }
+
+        Time.timeScale = 1f;
     }
 
     private void RestartGame()
     {
         SceneManager.LoadScene(0);
+        ResetLives();
+        Time.timeScale = 1f;
+    }
+
+    private void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoad;
     }
 }
