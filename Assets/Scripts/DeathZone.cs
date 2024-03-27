@@ -7,5 +7,6 @@ public class DeathZone : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         GameManager.Instance.LoseLife();
+        Destroy(other.gameObject);
     }
 }

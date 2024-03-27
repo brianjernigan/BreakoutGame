@@ -7,7 +7,6 @@ using UnityEngine.SceneManagement;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private int _lives = 3;
-    [SerializeField] private int _bricks = 20;
     [SerializeField] private float _resetDelay = 1f;
 
     [SerializeField] private TMP_Text _livesText;
@@ -19,6 +18,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject _paddle;
 
     private GameObject _clonePaddle;
+
+    private int _bricksRemaining;
 
     private static GameManager _instance;
     public static GameManager Instance => _instance;
@@ -42,26 +43,22 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.N))
         {
-            if (SceneManager.GetActiveScene().buildIndex < 3)
-            {
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-            } else
-            {
-                
-            }
-            
+            LoadNextScene();
         }
+
+        Debug.Log(_bricksRemaining);
     }
 
     public void Setup()
     {
         _clonePaddle = Instantiate(_paddle, transform.position, Quaternion.identity);
         Instantiate(_bricksPrefab, transform.position, Quaternion.identity);
+        _bricksRemaining = 20;
     }
 
     private void CheckGameOver()
     {
-        if (_bricks < 1)
+        if (_bricksRemaining < 1)
         {
             _youWon.SetActive(true);
             Time.timeScale = .25f;
@@ -79,7 +76,7 @@ public class GameManager : MonoBehaviour
     private void Reset()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        ReloadScene();
     }
 
     public void AddLife()
@@ -104,7 +101,28 @@ public class GameManager : MonoBehaviour
 
     public void DestroyBrick()
     {
-        _bricks--;
+        _bricksRemaining--;
         CheckGameOver();
+    }
+
+    private void ReloadScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    private void LoadNextScene()
+    {
+        if (SceneManager.GetActiveScene().buildIndex < 2)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        } else
+        {
+            RestartGame();
+        }
+    }
+
+    private void RestartGame()
+    {
+        SceneManager.LoadScene(0);
     }
 }
